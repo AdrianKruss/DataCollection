@@ -1,4 +1,15 @@
-﻿########### Declaring variable #############
+﻿##################### ReadMe ###########################################################
+#
+# Please review the instructions:
+#
+# Text: https://github.com/AdrianKruss/DataCollection/blob/master/README.md
+#
+# Word : https://github.com/AdrianKruss/DataCollection/blob/master/Read-Me.docx
+#
+#######################################################################################
+
+
+########### Declaring variable #############
 $FailedItems = @()
 
 ############### Collecting AntiSpyware setting ########################
@@ -31,10 +42,6 @@ $OSCurrentVersion = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Mi
 $RTProtection = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Real-Time Protection"
 
 
-
-
-
-
 ################ Collecting Password Settings ###################
 
 # Collecting Password Complexity settings 
@@ -51,8 +58,6 @@ $RTProtection = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Micros
 
 $DeviceLock = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\device\DeviceLock"
 $AllowScreenTimeoutWhileLockedUserConfig = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\DeviceLock\AllowScreenTimeoutWhileLockedUserConfig"
-#$AlphanumericDevicePasswordRequired = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\DeviceLock\AlphanumericDevicePasswordRequired"
-#$DevicePasswordEnabled = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\DeviceLock\DevicePasswordEnabled"
 
 ################ Collecting Local Security Policy Settings ###################
 SecEdit /export /cfg .\cfg.ini
@@ -130,15 +135,15 @@ if($DeviceLock.MinDevicePasswordComplexCharacters -ne "3")
 
 if($DeviceLock.DevicePasswordExpiration -lt "180")
 {
-    Write-Output "Device doesn't meet Intune Password Policy Expiration.For Intune Device Policy Settings please visit https://dev.azure.com/Supportability/Rave%20Desk/_wiki/wikis/Rave%20Desk/327435/Intune-Policy-Settings"
-    $FailedItems += "Device doesn't meet Intune Password Policy Expiration.For Intune Device Policy Settings please visit https://dev.azure.com/Supportability/Rave%20Desk/_wiki/wikis/Rave%20Desk/327435/Intune-Policy-Settings"
+    Write-Output "Device doesn't meet Intune Password Policy Expiration.The device password expiration is less than 180 days"
+    $FailedItems += "Device doesn't meet Intune Password Policy Expiration. The device password expiration is less than 180 days"
 }
 
 
 if($DeviceLock.DevicePasswordHistory -lt "5")
 {
-    Write-Output "Device doesn't meet Intune Password Policy History.For Intune Device Policy Settings please visit https://dev.azure.com/Supportability/Rave%20Desk/_wiki/wikis/Rave%20Desk/327435/Intune-Policy-Settings"
-    $FailedItems += "Device doesn't meet Intune Password Policy History.For Intune Device Policy Settings please visit https://dev.azure.com/Supportability/Rave%20Desk/_wiki/wikis/Rave%20Desk/327435/Intune-Policy-Settings"
+    Write-Output "Device doesn't meet Intune Password Policy History. The Device Password History is less than 5"
+    $FailedItems += "Device doesn't meet Intune Password Policy History.The Device Password History is less than 5"
 }
 
 if($DeviceLock.MinDevicePasswordLength -lt "8")
@@ -181,4 +186,4 @@ New-HTML {
             }
         }
                 
-} -FilePath $PSScriptRoot\Intune.Html -UseCssLinks -UseJavaScriptLinks -TitleText 'Intune results' -ShowHTML
+} -FilePath Intune.Html -UseCssLinks -UseJavaScriptLinks -TitleText 'Intune results' -ShowHTML
