@@ -133,12 +133,17 @@ if($DeviceLock.MinDevicePasswordComplexCharacters -ne "3")
     $FailedItems += "The number of complex element types (uppercase and lowercase letters, numbers, and punctuation) required for a strong PIN or password is not set"
 }
 
-if($DeviceLock.DevicePasswordExpiration -lt "180")
+if($DeviceLock.DevicePasswordExpiration -gt "180")
 {
     Write-Output "Device doesn't meet Intune Password Policy Expiration.The device password expiration is less than 180 days"
     $FailedItems += "Device doesn't meet Intune Password Policy Expiration. The device password expiration is less than 180 days"
 }
 
+if($DeviceLock.DevicePasswordExpiration -eq "0")
+{
+    Write-Output "Device doesn't meet Intune Password Policy Expiration.The device password expiration is set to never expire"
+    $FailedItems += "Device doesn't meet Intune Password Policy Expiration. The device password expiration is set to never expire"
+}
 
 if($DeviceLock.DevicePasswordHistory -lt "5")
 {
