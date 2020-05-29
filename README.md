@@ -19,12 +19,7 @@ Navigate to https://github.com/AdrianKruss/DataCollection and download Get-RDWVD
 
 3.	After completion run:
 ```
-      if (Get-Module -ListAvailable -Name PSWriteHTML) {
-          Write-Host "Module exists"
-      } 
-      else {
           Install-Module PSWriteHTML -Force
-      }
 
 ```
 4.	Then launch Get-RDWVDIntuneSettings.ps1
