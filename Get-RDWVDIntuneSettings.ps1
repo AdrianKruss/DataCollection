@@ -8,6 +8,14 @@
 #
 #######################################################################################
 
+########### Importing HTML Module ##############
+if (Get-Module -ListAvailable -Name PSWriteHTML) {
+    Write-Host "Module exists"
+} 
+else {
+    Install-Module PSWriteHTML -Force
+}
+
 ########### Declaring variable #############
 $FailedItems = @()
 $Goodvalues = @{}
@@ -33,6 +41,7 @@ $Signature = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft
 ############ Collecting Microsoft Firewall  settings ################
 
 $WindowsFWEnabled = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile"
+$WindowsPFWEnabled = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\PublicProfile"
 
 ############ Collecting Microsoft OS Minimum version settings ################
 
@@ -41,6 +50,14 @@ $OSCurrentVersion = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Mi
 ############ Collecting Microsoft Real Time protection settings ################
 
 $RTProtection = Get-ItemProperty -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Real-Time Protection"
+
+############ Collecting Event Viewer data (Admin) ################################
+
+$EVAdmin = Get-WinEvent Microsoft-Windows-DeviceManagement-Enterprise-Diagnostics-Provider/Admin | where {($_.id -eq "404") -or ($_.id -eq "809") -or ($_.id -eq "820")}
+
+############ Collecting Event Viewer data (Operational) ################################
+
+$EVOperational = Get-WinEvent Microsoft-Windows-DeviceManagement-Enterprise-Diagnostics-Provider/Operational | where {($_.id -eq "404") -or ($_.id -eq "809") -or ($_.id -eq "820")}
 
 
 ################ Collecting Password Settings ###################
@@ -70,11 +87,11 @@ $PasswordHistorySize = (Cat .\cfg.ini | Select-String –Pattern "PasswordHistor
 
 ##################### Main #####################
 
-if($WindowsFWEnabled -eq "0")
+if($WindowsFWEnabled.EnableFirewall -eq "0" -and $WindowsPFWEnabled.EnableFirewall -eq "0")
 {
-    #Write-Output "Windows Firewall is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/you-need-to-enable-defender-firewall-windows"
-    $FailedItems += "Windows Firewall is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/you-need-to-enable-defender-firewall-windows"
-    $Badvalues.Firewall =  $WindowsFWEnabled.EnableFirewall
+Write-Output "Windows Firewall is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/you-need-to-enable-defender-firewall-windows"
+$FailedItems += "Windows Firewall is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/you-need-to-enable-defender-firewall-windows"
+$Badvalues.Firewall =  $WindowsFWEnabled.EnableFirewall
 }
 
 else
@@ -84,9 +101,9 @@ $Goodvalues.Firewall =  $WindowsFWEnabled.EnableFirewall
 
 if($DisableAntiSpyware.DisableAntiSpyware -eq "1")
 {
-    #Write-Output "Windows Defender Anti-Spyware Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
-    $FailedItems += "Windows Defender Anti-Spyware Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
-    $Badvalues.DisableAntiSpyware = $DisableAntiSpyware.DisableAntiSpyware
+Write-Output "Windows Defender Anti-Spyware Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
+$FailedItems += "Windows Defender Anti-Spyware Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
+$Badvalues.DisableAntiSpyware = $DisableAntiSpyware.DisableAntiSpyware
 }
 
 else
@@ -97,9 +114,9 @@ $Goodvalues.DisableAntiSpyware = $DisableAntiSpyware.DisableAntiSpyware
 
 if($DisableAntiVirus.DisableAntiVirus -eq "1")
 {
-    #Write-Output "Windows Defendput er Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
-    $FailedItems += "Windows Defendput er Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
-    $Badvalues.DisableAntiVirus = $DisableAntiVirus.DisableAntiVirus
+Write-Output "Windows Defendput er Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
+$FailedItems += "Windows Defendput er Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
+$Badvalues.DisableAntiVirus = $DisableAntiVirus.DisableAntiVirus
 }
 else
 {
@@ -108,9 +125,9 @@ $Goodvalues.DisableAntiVirus = $DisableAntiVirus.DisableAntiVirus
 
 if($RTProtection.DpaDisabled -eq "1")
 {
-    #Write-Output "Windows Defender Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
-    $FailedItems += "Windows Defender Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
-    $Badvalues.RTPProtection = $RTProtection.DpaDisabled
+Write-Output "Windows Defender Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
+$FailedItems += "Windows Defender Anti-Virus Protection is disabled but needs to be enabled for compliance https://docs.microsoft.com/en-us/mem/intune/user-help/turn-on-defender-windows"
+$Badvalues.RTPProtection = $RTProtection.DpaDisabled
 }
 
 else
@@ -120,9 +137,9 @@ $Goodvalues.RTPProtection = $RTProtection.DpaDisabled
 
 if($Signature -eq "1")
 {
-    #Write-Output "AntiVirus Signatures and or Definitions are out of Date"
-    $FailedItems += "AntiVirus Signatures and or Definitions are out of Date"
-    $Badvalues.signature = $Signature.DisableDefaultSigs
+Write-Output "AntiVirus Signatures and or Definitions are out of Date"
+$FailedItems += "AntiVirus Signatures and or Definitions are out of Date"
+$Badvalues.signature = $Signature.DisableDefaultSigs
 }
 
 else
@@ -132,14 +149,27 @@ $Goodvalues.signature = $Signature.DisableDefaultSigs
 
 if($DefenderPolicies -ne $null)
 {
-    #Write-Output "Conflicting Anti-Virus Policies, see HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender"
-    $FailedItems += "Conflicting Anti-Virus Policies, see HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender"
-    $Badvalues.DefenderPolicies = $DefenderPolicies
+Write-Output "Conflicting Anti-Virus Policies, see HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender"
+$FailedItems += "Conflicting Anti-Virus Policies, see HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender"
+$Badvalues.DefenderPolicies = $DefenderPolicies
 }
 
 else
 {
-$GoodValues.DefenderPolicies = "No conflicts"
+$GoodValues.DefenderPolicies = $DefenderPolicies
+}
+
+if($EVAdmin)
+{
+Write-Output "Errors related to Password Days expiration in event vwr logs(Admin):"
+$FailedItems += "Errors related to Password Days expiration in event vwr logs(Admin):"
+}
+
+
+if($EVOperational)
+{
+Write-Output "Errors related to Password Days expiration in event vwr logs(Opertional):"
+$FailedItems += "Errors related to Password Days expiration in event vwr logs(Opertional):"
 }
 
 ############### OS #######################
@@ -147,15 +177,15 @@ $GoodValues.DefenderPolicies = "No conflicts"
 if($OSCurrentVersion.CurrentMajorVersionNumber -ge "10")
 {
 
-    if($OSCurrentVersion.CurrentBuildNumber -lt "17738")
-    {
-      $FailedItems += "Windows OS version is Windows 10 or greater but build is less than 17738, see https://docs.microsoft.com/en-us/windows/release-information/ for Windows 10 release information"  
-      $Badvlaues.CurrentBuildNumber = $OSCurrentVersion.CurrentBuildNumber
-    }
-    else
-    {
-    $Goodvalues.CurrentBuildNumber = $OSCurrentVersion.CurrentBuildNumber
-    }
+if($OSCurrentVersion.CurrentBuildNumber -lt "17738")
+{
+$FailedItems += "Windows OS version is Windows 10 or greater but build is less than 17738, see https://docs.microsoft.com/en-us/windows/release-information/ for Windows 10 release information"  
+$Badvlaues.CurrentBuildNumber = $OSCurrentVersion.CurrentBuildNumber
+}
+else
+{
+$Goodvalues.CurrentBuildNumber = $OSCurrentVersion.CurrentBuildNumber
+}
 
 
 }
@@ -163,8 +193,8 @@ if($OSCurrentVersion.CurrentMajorVersionNumber -ge "10")
 if($OSCurrentVersion.CurrentMajorVersionNumber -lt "10")
 {
 
-    $FailedItems += "Windows OS version is not Windows 10 or greater"
-    $BadValues.OSCurrentMajorVersion = $OSCurrentVersion.CurrentMajorVersionNumber
+$FailedItems += "Windows OS version is not Windows 10 or greater"
+$BadValues.OSCurrentMajorVersion = $OSCurrentVersion.CurrentMajorVersionNumber
 
 }
 else
@@ -175,11 +205,11 @@ $Goodvalues.OSCurrentMajorVersion = $OSCurrentVersion.CurrentMajorVersionNumber
 ##################### Password ####################
 
 
-if($DeviceLock.MinDevicePasswordComplexCharacters -ne "2")
+if($DeviceLock.MinDevicePasswordComplexCharacters -ne "2" -and $PasswordPolicyComplexity -ne 1)
 {
-    #Write-Output "The number of complex element types (Require digits and lowercase letters) required for a strong PIN or password is not set"
-    $FailedItems += "The number of complex element types (Require digits and lowercase letters) required for a strong PIN or password is not set"
-    $BadValues.MinDevicePasswordComplexCharacters = $DeviceLock.MinDevicePasswordComplexCharacters
+Write-Output "The number of complex element types (uppercase and lowercase letters, numbers, and punctuation) required for a strong PIN or password is not set"
+$FailedItems += "The number of complex element types (uppercase and lowercase letters, numbers, and punctuation) required for a strong PIN or password is not set"
+$BadValues.MinDevicePasswordComplexCharacters = $DeviceLock.MinDevicePasswordComplexCharacters
 }
 
 else
@@ -187,11 +217,11 @@ else
 $Goodvalues.MinDevicePasswordComplexCharacters = $DeviceLock.MinDevicePasswordComplexCharacters
 }
 
-if($DeviceLock.DevicePasswordExpiration -lt "180")
+if($DeviceLock.DevicePasswordExpiration -lt "180" -and $PasswordPolicyExpiration -lt "180")
 {
-    #Write-Output "Device doesn't meet Intune Password Policy Expiration.The device password expiration is less than 180 days"
-    $FailedItems += "Device doesn't meet Intune Password Policy Expiration. The device password expiration is less than 180 days"
-    $Badvalues.DevicePasswordExpiration = $DeviceLock.DevicePasswordExpiration
+Write-Output "Device doesn't meet Intune Password Policy Expiration.The device password expiration is less than 180 days"
+$FailedItems += "Device doesn't meet Intune Password Policy Expiration. The device password expiration is less than 180 days"
+$Badvalues.DevicePasswordExpiration = $DeviceLock.DevicePasswordExpiration
 }
 
 else
@@ -199,11 +229,11 @@ else
 $Goodvalues.DevicePasswordExpiration = $DeviceLock.DevicePasswordExpiration
 }
 
-if($DeviceLock.DevicePasswordHistory -lt "5")
+if($DeviceLock.DevicePasswordHistory -lt "5" -and $PasswordHistorySize -lt "5")
 {
-    #Write-Output "Device doesn't meet Intune Password Policy History. The Device Password History is less than 5"
-    $FailedItems += "Device doesn't meet Intune Password Policy History.The Device Password History is less than 5"
-    $BadValues.DevicePasswordHistory = $DeviceLock.DevicePasswordHistory
+Write-Output "Device doesn't meet Intune Password Policy History. The Device Password History is less than 5"
+$FailedItems += "Device doesn't meet Intune Password Policy History.The Device Password History is less than 5"
+$BadValues.DevicePasswordHistory = $DeviceLock.DevicePasswordHistory
 }
 else
 {
@@ -212,9 +242,9 @@ $Goodvalues.DevicePasswordHistory = $DeviceLock.DevicePasswordHistory
 
 if($DeviceLock.MinDevicePasswordLength -lt "8")
 {
-    #Write-Output "Device password length is less than 8 characters"
-    $FailedItems += "Device password length is less than 8 characters"
-    $BadValues.MinDevicePasswordLength = $DeviceLock.MinDevicePasswordLength
+Write-Output "Device password length is less than 8 characters"
+$FailedItems += "Device password length is less than 8 characters"
+$BadValues.MinDevicePasswordLength = $DeviceLock.MinDevicePasswordLength
 }
 
 else
@@ -223,9 +253,9 @@ $Goodvalues.MinDevicePasswordLength = $DeviceLock.MinDevicePasswordLength
 }
 if($DeviceLock.AlphanumericDevicePasswordRequired -ne "0")
 {
-    #Write-Output "Device must support alpha numeric passwords"
-    $FailedItems += "Device must support alpha numeric passwords"
-    $BadValues.AlphanumericDevicePasswordRequired = $DeviceLock.AlphanumericDevicePasswordRequired
+Write-Output "Device must support alpha numeric passwords"
+$FailedItems += "Device must support alpha numeric passwords"
+$BadValues.AlphanumericDevicePasswordRequired = $DeviceLock.AlphanumericDevicePasswordRequired
 }
 
 else
@@ -235,9 +265,9 @@ $Goodvalues.AlphanumericDevicePasswordRequired = $DeviceLock.AlphanumericDeviceP
 
 if($DeviceLock.AllowSimpleDevicePassword -eq "1")
 {
-    #Write-Output "Device simple Password is enable"
-    $FailedItems += "Device simple Password is enable"
-    $BadValues.AllowSimpleDevicePassword = $DeviceLock.AllowSimpleDevicePassword
+Write-Output "Device simple Password is enable"
+$FailedItems += "Device simple Password is enable"
+$BadValues.AllowSimpleDevicePassword = $DeviceLock.AllowSimpleDevicePassword
 }
 
 else
@@ -247,9 +277,9 @@ $Goodvalues.AllowSimpleDevicePassword = $DeviceLock.AllowSimpleDevicePassword
 
 if($DeviceLock.DevicePasswordEnabled -eq "1")
 {
-    #Write-Output "Device Password is disable"
-    $FailedItems += "Device Password is disable"
-    $BadValues.DevicePasswordEnabled = $DeviceLock.DevicePasswordEnabled
+Write-Output "Device Password is disable"
+$FailedItems += "Device Password is disable"
+$BadValues.DevicePasswordEnabled = $DeviceLock.DevicePasswordEnabled
 }
 
 else
@@ -262,17 +292,20 @@ $Goodvalues.DevicePasswordEnabled = $DeviceLock.DevicePasswordEnabled
 
 if(!$FailedItems){
 
-    $FailedItems = "Device settings match required Intune compliance settings"
+$FailedItems = "Device settings match required Intune compliance settings"
 
 }
 New-HTML {
 
-    New-HTMLTab -Name "Intune results"{
+New-HTMLTab -Name "Intune results"{
+      New-HTMLTable -DataTable $FailedItems{
+      }
 
-            New-HTMLTable -DataTable $Goodvalues -HideFooter -AutoSize { New-HTMLTableHeader -Title 'GoodValues' -FontSize 24 -Color green -BackGroundColor LightBlue}
-            
-            New-HTMLTable -DataTable $Badvalues -HideFooter -AutoSize { New-HTMLTableHeader -Title 'BadValues' -FontSize 24 -Color Red -BackGroundColor LightBlue}
+      New-HTMLTable -DataTable $Goodvalues -HideFooter -AutoSize { New-HTMLTableHeader -Title 'GoodValues' -FontSize 24 -Color green -BackGroundColor LightBlue}
+      
+      New-HTMLTable -DataTable $Badvalues -HideFooter -AutoSize { New-HTMLTableHeader -Title 'BadValues' -FontSize 24 -Color Red -BackGroundColor LightBlue}
 
-        }
-                
+  }
+          
 } -FilePath Intune.Html -UseCssLinks -UseJavaScriptLinks -TitleText 'Intune results' -ShowHTML
+
