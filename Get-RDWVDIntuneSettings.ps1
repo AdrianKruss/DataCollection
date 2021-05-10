@@ -320,6 +320,17 @@ if(!$FailedItems){
 New-HTML {
 
     Tab -Name "Intune results"{
+            
+            if ($null -eq $FailedItems) 
+            {
+                New-HTMLText -text 'Pass' -FontSize 34 -Color Green -BackGroundColor LightBlue -Alignment center
+                #New-HTMLTableHeader -Title 'Failed' -FontSize 24 -Color Red -BackGroundColor Green
+            }
+            elseif ($null -ne $FailedItems) 
+            {
+                New-HTMLText -text 'Failed' -FontSize 34 -Color Red -BackGroundColor LightBlue -Alignment center
+            }
+        
             New-HTMLTable -DataTable $FailedItems{ }
     
               
@@ -331,5 +342,5 @@ New-HTML {
        
     New-HTMLTable -DataTable $ExpectedValues -HideFooter { New-HTMLTableHeader -Title 'ExpectedValues' -FontSize 24 -Color Blue -BackGroundColor LightBlue} }
                 
-} -FilePath Intune.Html -UseCssLinks -UseJavaScriptLinks -TitleText 'Intune results' -ShowHTML
+} -FilePath Intune.Html -online -TitleText 'Intune results' -ShowHTML
 
